@@ -1,0 +1,8 @@
+pandas
+gspread
+google-api-python-client
+google-auth
+matplotlib
+serpapi
+python-dotenv
+PyYAML

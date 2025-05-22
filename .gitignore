@@ -1,0 +1,15 @@
+# Ignore environment variables and credentials
+.env
+credentials/
+*.json
+
+# Ignore Python cache and bytecode
+__pycache__/
+*.pyc
+
+# Ignore system/macOS files
+.DS_Store
+
+# Ignore chart output images
+*.png
+

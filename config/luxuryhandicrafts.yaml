@@ -1,0 +1,10 @@
+site_url: "sc-domain:luxuryhandicraft.com"
+start_date: "2025-01-01"
+end_date: "2025-04-30"
+
+sheet_names:
+  raw_data: "Luxury GSC Raw Data"
+  insights: "Luxury GSC Insights"
+  serp: "Luxury SERP Data"
+  charts: "Luxury Chart Data"
+

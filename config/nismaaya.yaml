@@ -1,0 +1,10 @@
+site_url: "sc-domain:nismaayadecor.in"
+start_date: "2025-01-01"
+end_date: "2025-04-30"
+
+sheet_names:
+  raw_data: "GSC Raw Data"
+  insights: "GSC Insights"
+  serp: "SERP Data"
+  charts: "GSC Chart Data"
+
