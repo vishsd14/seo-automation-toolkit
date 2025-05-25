@@ -44,3 +44,30 @@ def get_gsc_data_dynamic(service, site_url, start_date="2025-01-01", end_date="2
     except Exception as e:
         print("❌ Error in get_gsc_data_dynamic:", e)
         return [], []
+
+# --- Time Series CTR + Clicks (OAuth version) ---
+def get_time_series_data(service, site_url, start_date="2025-01-01", end_date="2025-04-30"):
+    print("📈 Fetching time-series data for:", site_url)
+    request = {
+        "startDate": start_date,
+        "endDate": end_date,
+        "dimensions": ["date"],
+        "rowLimit": 1000
+    }
+
+    try:
+        response = service.searchanalytics().query(siteUrl=site_url, body=request).execute()
+        data = []
+        for row in response.get("rows", []):
+            date = row["keys"][0]
+            clicks = row.get("clicks", 0)
+            impressions = row.get("impressions", 0)
+            ctr = round((clicks / impressions) * 100, 2) if impressions else 0
+            position = row.get("position", 0)
+            data.append([date, clicks, impressions, ctr, position])
+
+        return pd.DataFrame(data, columns=["Date", "Clicks", "Impressions", "CTR", "Position"])
+
+    except Exception as e:
+        print("❌ Error in get_time_series_data:", e)
+        return pd.DataFrame(columns=["Date", "Clicks", "Impressions", "CTR", "Position"])
