@@ -3,20 +3,31 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
+import streamlit as st
 
-load_dotenv()
+# --- Use Streamlit secrets (for cloud deployment) ---
+SERVICE_ACCOUNT_INFO = st.secrets["gcp_service_account"]
 
-# Auth Setup
-SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
 SCOPES = [
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 client = gspread.authorize(creds)
 service = build("webmasters", "v3", credentials=creds)
+
+# --- OAuth Flow (User-Based Login) ---
+def get_authenticated_services():
+    flow = InstalledAppFlow.from_client_secrets_file(
+        'credentials/client_secret_oauth.json', SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    client = gspread.authorize(creds)
+    service = build("webmasters", "v3", credentials=creds)
+    return client, service
+
+client, service = get_authenticated_services()
 
 # --- GSC Query + Page Data ---
 def get_gsc_data(site_url, start_date="2025-01-01", end_date="2025-04-30"):
