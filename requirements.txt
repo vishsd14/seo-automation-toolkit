@@ -3,6 +3,8 @@ gspread
 google-api-python-client
 google-auth
 matplotlib
-serpapi
+serpapi==2.3.0
 python-dotenv
 PyYAML
+google-auth-oauthlib
+google-auth-httplib2
