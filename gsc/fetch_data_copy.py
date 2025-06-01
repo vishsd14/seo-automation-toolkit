@@ -1,23 +1,34 @@
+import os
 import gspread
 import pandas as pd
-from google.oauth2.service_account import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-import streamlit as st
+from dotenv import load_dotenv
 
-# --- Auth using Streamlit Secrets ---
-SERVICE_ACCOUNT_INFO = st.secrets["gcp_service_account"]
+load_dotenv()
+
+# --- Scopes ---
 SCOPES = [
     "https://www.googleapis.com/auth/webmasters.readonly",
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
-client = gspread.authorize(creds)
-service = build("webmasters", "v3", credentials=creds)
+# --- OAuth Flow (User-Based Login) ---
+def get_authenticated_services():
+    flow = InstalledAppFlow.from_client_secrets_file(
+        'credentials/client_secret_oauth.json', SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    client = gspread.authorize(creds)
+    service = build("webmasters", "v3", credentials=creds)
+    return client, service
 
-# --- GSC Keyword + Page Data ---
+client, service = get_authenticated_services()
+
+# --- GSC Query + Page Data ---
 def get_gsc_data(site_url, start_date="2025-01-01", end_date="2025-04-30"):
+    print("🔍 Fetching keyword data from:", site_url)
     request = {
         "startDate": start_date,
         "endDate": end_date,
@@ -39,12 +50,14 @@ def get_gsc_data(site_url, start_date="2025-01-01", end_date="2025-04-30"):
 
             raw_data.append([keyword, page_url, clicks, impressions])
 
-            bucket = (
-                "Top 3 (High Performing)" if position <= 3 else
-                "4-10 (Needs Optimization)" if position <= 10 else
-                "11-20 (Potential Improvement)" if position <= 20 else
-                "20+ (Needs Strong SEO)"
-            )
+            if position <= 3:
+                bucket = "Top 3 (High Performing)"
+            elif 4 <= position <= 10:
+                bucket = "4-10 (Needs Optimization)"
+            elif 11 <= position <= 20:
+                bucket = "11-20 (Potential Improvement)"
+            else:
+                bucket = "20+ (Needs Strong SEO)"
 
             insights_data.append([
                 keyword, page_url, clicks, impressions, ctr, position, bucket,
@@ -55,11 +68,12 @@ def get_gsc_data(site_url, start_date="2025-01-01", end_date="2025-04-30"):
         return raw_data, insights_data
 
     except Exception as e:
-        st.error(f"❌ Error in get_gsc_data: {e}")
+        print("❌ Error in get_gsc_data:", e)
         return [], []
 
-# --- Time Series Data ---
+# --- Time Series CTR + Clicks ---
 def get_time_series_data(site_url, start_date="2025-01-01", end_date="2025-03-31"):
+    print("📈 Fetching time-series data for:", site_url)
     request = {
         "startDate": start_date,
         "endDate": end_date,
@@ -81,5 +95,5 @@ def get_time_series_data(site_url, start_date="2025-01-01", end_date="2025-03-31
         return pd.DataFrame(data, columns=["Date", "Clicks", "Impressions", "CTR", "Position"])
 
     except Exception as e:
-        st.error(f"❌ Error in get_time_series_data: {e}")
+        print("❌ Error in get_time_series_data:", e)
         return pd.DataFrame(columns=["Date", "Clicks", "Impressions", "CTR", "Position"])
