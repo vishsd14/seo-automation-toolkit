@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials
 import urllib.parse
 
 from gsc.fetch_data_dynamic import get_time_series_data
-from gsc.serp_fetcher import get_serp_data
+#from gsc.serp_fetcher import get_serp_data
 from gsc.chart_generator import generate_and_export_charts
 from utils.sheet_handler import update_google_sheet
 
@@ -84,13 +84,13 @@ if yaml_file:
                     "Position", "Ranking Bucket", "Optimization Opportunity", "Quick Win Potential"
                 ])
 
-                serp_data = []
-                if raw_data:
-                    for keyword in [row[0] for row in raw_data[:10]]:
-                        serp_data.append(get_serp_data(keyword))
-                update_google_sheet(client, serp_data, sheets["serp"], [
-                    "Keyword", "Top Competitors", "People Also Ask", "Related Searches"
-                ])
+                #serp_data = []
+                #if raw_data:
+                #    for keyword in [row[0] for row in raw_data[:10]]:
+                #        serp_data.append(get_serp_data(keyword))
+                #update_google_sheet(client, serp_data, sheets["serp"], [
+                #    "Keyword", "Top Competitors", "People Also Ask", "Related Searches"
+                #])
 
                 ts_df = get_time_series_data(site_url, start_date, end_date)
                 generate_and_export_charts(client, ts_df, sheets["charts"])
