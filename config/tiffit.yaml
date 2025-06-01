@@ -1,10 +1,9 @@
 site_url: "sc-domain:tiffit.com"
+spreadsheet_id: "15MMDmvatemCbrgg-QhjicHuqd0UDpVjQqMEeBOzqraU"
 start_date: "2025-01-01"
-end_date: "2025-05-21"
+end_date: "2025-05-30"
 
 sheet_names:
-  raw_data: "GSC Raw Data"
-  insights: "GSC Insights"
-  serp: "SERP Data"
-  charts: "GSC Chart Data"
-
+  raw_data: "Raw Data"
+  insights: "Insights"
+  charts: "Charts"

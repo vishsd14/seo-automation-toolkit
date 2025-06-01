@@ -5,17 +5,16 @@ from datetime import datetime
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
-import urllib.parse
 
-from gsc.fetch_data_dynamic import get_time_series_data
-#from gsc.serp_fetcher import get_serp_data
+from gsc.fetch_data_dynamic import get_gsc_data_dynamic, get_time_series_data
 from gsc.chart_generator import generate_and_export_charts
 from utils.sheet_handler import update_google_sheet
+from gsc.fetch_data import client  # For Google Sheets access
 
 st.set_page_config(page_title="SEO Automation Toolkit", page_icon="🔍")
 
 st.title("🔍 SEO Automation Toolkit")
-st.markdown("Upload your YAML config and authenticate with Google to trigger full GSC + SERP automation.")
+st.markdown("Upload your YAML config and authenticate with Google to trigger the automation.")
 
 # --- Google OAuth Handler ---
 def authenticate_user():
@@ -66,6 +65,7 @@ if yaml_file:
         config = yaml.safe_load(f)
 
     site_url = config["site_url"]
+    spreadsheet_id = config["spreadsheet_id"]
     start_date = config.get("start_date", "2025-01-01")
     end_date = config.get("end_date", "2025-04-30")
     sheets = config["sheet_names"]
@@ -75,25 +75,17 @@ if yaml_file:
 
         if service:
             with st.spinner("Running automation tasks..."):
-                from gsc.fetch_data_dynamic import get_gsc_data_dynamic
                 raw_data, insights_data = get_gsc_data_dynamic(service, site_url, start_date, end_date)
-                from gsc.fetch_data import client  # Use default sheet client
-                update_google_sheet(client, raw_data, sheets["raw_data"], ["Keyword", "Page URL", "Clicks", "Impressions"])
-                update_google_sheet(client, insights_data, sheets["insights"], [
+
+                update_google_sheet(client, raw_data, spreadsheet_id, sheets["raw_data"],
+                                    ["Keyword", "Page URL", "Clicks", "Impressions"])
+                update_google_sheet(client, insights_data, spreadsheet_id, sheets["insights"], [
                     "Keyword", "Page URL", "Clicks", "Impressions", "CTR (%)",
                     "Position", "Ranking Bucket", "Optimization Opportunity", "Quick Win Potential"
                 ])
 
-                #serp_data = []
-                #if raw_data:
-                #    for keyword in [row[0] for row in raw_data[:10]]:
-                #        serp_data.append(get_serp_data(keyword))
-                #update_google_sheet(client, serp_data, sheets["serp"], [
-                #    "Keyword", "Top Competitors", "People Also Ask", "Related Searches"
-                #])
-
                 ts_df = get_time_series_data(site_url, start_date, end_date)
-                generate_and_export_charts(client, ts_df, sheets["charts"])
+                generate_and_export_charts(client, ts_df, spreadsheet_id, sheets["charts"])
 
             st.success(f"✅ All tasks completed for {site_url} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         else:
