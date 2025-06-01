@@ -1,35 +1,26 @@
-import os
 import gspread
+import streamlit as st
 from google.oauth2.service_account import Credentials
-from dotenv import load_dotenv
 
-load_dotenv()
-
-SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-
-# Setup credentials once
+# --- Auth Setup using Streamlit secrets ---
+SERVICE_ACCOUNT_INFO = st.secrets["gcp_service_account"]
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
+    "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 client = gspread.authorize(creds)
 
-# --- Update a specific sheet ---
-def update_google_sheet(data, sheet_name, headers):
+# --- Sheet Writer Function ---
+def update_google_sheet(client, data, sheet_name, headers):
     try:
-        sheet = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
-        print(f"📄 Updating existing sheet: {sheet_name}")
-    except gspread.exceptions.WorksheetNotFound:
-        print(f"📄 Creating new sheet: {sheet_name}")
-        sheet = client.open_by_key(SPREADSHEET_ID).add_worksheet(title=sheet_name, rows="1000", cols="20")
-
-    sheet.clear()
-    sheet.append_row(headers)
-
-    if data:
-        sheet.append_rows(data)
-        print(f"✅ Wrote {len(data)} rows to sheet: {sheet_name}")
-    else:
-        print(f"⚠️ No data to write to sheet: {sheet_name}")
+        spreadsheet = client.open_by_url(st.secrets["spreadsheet_url"])
+        worksheet = spreadsheet.worksheet(sheet_name)
+        worksheet.clear()
+        worksheet.append_row(headers)
+        for row in data:
+            worksheet.append_row(row)
+        print(f"✅ Data written to sheet: {sheet_name}")
+    except Exception as e:
+        print(f"❌ Error updating sheet {sheet_name}:", e)
