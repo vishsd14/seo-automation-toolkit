@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 
 from gsc.fetch_data import get_gsc_data, get_time_series_data, client, service
-from gsc.serp_fetcher import get_serp_data
+#from gsc.serp_fetcher import get_serp_data
 from gsc.chart_generator import generate_and_export_charts
 from utils.sheet_handler import update_google_sheet
 
@@ -50,13 +50,13 @@ def main():
     ])
 
     # Step 2: SERP Data
-    serp_data = []
-    if raw_data:
-        for keyword in [row[0] for row in raw_data[:10]]:
-            serp_data.append(get_serp_data(keyword))
-    update_google_sheet(client, serp_data, sheet_config["serp"], [
-        "Keyword", "Top Competitors", "People Also Ask", "Related Searches"
-    ])
+    #serp_data = []
+    #if raw_data:
+    #    for keyword in [row[0] for row in raw_data[:10]]:
+    #        serp_data.append(get_serp_data(keyword))
+    #update_google_sheet(client, serp_data, sheet_config["serp"], [
+    #    "Keyword", "Top Competitors", "People Also Ask", "Related Searches"
+    #])
 
     # Step 3: Charts
     ts_df = get_time_series_data(site_url, start_date, end_date)
