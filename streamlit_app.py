@@ -32,14 +32,13 @@ def authenticate_user():
     flow = Flow.from_client_config(
         client_config,
         scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
-        redirect_uri="urn:ietf:wg:oauth:2.0:oob"  # Manual copy-paste flow
+        redirect_uri=st.secrets["google_oauth"]["redirect_uris"][0]
     )
 
-    auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes='true')
-    st.markdown(f"🔐 [Click here to log in with Google]({auth_url})")
-
-    code = st.text_input("Paste the authorization code here:")
-    if code:
+    # If 'code' is in query params, user returned from Google
+    query_params = st.query_params
+    if "code" in query_params:
+        code = query_params["code"]
         try:
             flow.fetch_token(code=code)
             creds = flow.credentials
@@ -48,6 +47,12 @@ def authenticate_user():
             return service
         except Exception as e:
             st.error(f"❌ Authorization failed: {e}")
+            return None
+    else:
+        # Start OAuth flow
+        auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes='true')
+        st.markdown(f"🔐 [Click here to log in with Google]({auth_url})")
+        st.stop()  # Wait for user to return after auth
 
     return None
 
@@ -70,9 +75,10 @@ if yaml_file:
     end_date = config.get("end_date", "2025-04-30")
     sheets = config["sheet_names"]
 
-    if st.button("🚀 Run SEO Automation"):
-        service = authenticate_user()
+    # Authenticate only once at the top level
+    service = authenticate_user()
 
+    if st.button("🚀 Run SEO Automation"):
         if service:
             with st.spinner("Running automation tasks..."):
                 raw_data, insights_data = get_gsc_data_dynamic(service, site_url, start_date, end_date)
@@ -89,6 +95,6 @@ if yaml_file:
 
             st.success(f"✅ All tasks completed for {site_url} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         else:
-            st.warning("🔐 Please authorize using Google first.")
+            st.warning("🔐 Google authentication is required to proceed.")
 else:
     st.info("Please upload a valid `.yaml` config file to begin.")
