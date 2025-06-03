@@ -32,7 +32,7 @@ def authenticate_user():
     flow = Flow.from_client_config(
         client_config,
         scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
-        redirect_uri=st.secrets["google_oauth"]["redirect_uris"][0]
+        redirect_uri="urn:ietf:wg:oauth:2.0:oob"  # Manual copy-paste flow
     )
 
     auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes='true')
